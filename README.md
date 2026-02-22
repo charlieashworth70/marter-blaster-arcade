@@ -60,7 +60,9 @@ merterblaster/
 ### GitHub Pages
 The game is automatically deployed to GitHub Pages when pushing to `main` branch.
 
-**Live URL**: https://charlieashworth70.github.io/marter-blaster-arcade/
+**Live URL**: https://charlieashworth70.github.io/marter-blaster-arcade/ 🎮
+
+**Status**: DEPLOYED ✅
 
 ### Manual Deployment
 1. Build (if needed): `npm run build`
