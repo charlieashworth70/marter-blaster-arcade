@@ -1,6 +1,5 @@
 // MarterBlaster - Retro Space Shooter with Mobile Support
 import TouchControls from './touch-controls.js';
-import { EnemyWaveManager } from './enemy-wave-manager.js';
 
 class MarterBlaster {
   constructor() {
@@ -35,11 +34,14 @@ class MarterBlaster {
       shotCooldown: 250 // ms between shots
     };
     
-    // Enemy Wave Manager
-    this.enemyWaveManager = new EnemyWaveManager(this);
+    // Enemies
+    this.enemies = [];
+    this.enemyRows = 5;
+    this.enemyCols = 10;
+    this.enemySpeed = 1;
     
-    // Initialize first wave
-    this.enemyWaveManager.startWave(0);
+    // Initialize enemies
+    this.initEnemies();
     
     // Touch controls
     this.touchControls = new TouchControls(this);
@@ -100,7 +102,8 @@ class MarterBlaster {
       this.player.y = this.canvas.height - 50;
     }
     
-    // Note: Enemy wave manager handles its own positioning
+    // Update enemy positions
+    this.updateEnemyPositions();
   }
   
   handleResize() {
@@ -110,6 +113,41 @@ class MarterBlaster {
     if (this.touchControls) {
       this.touchControls.positionControls();
     }
+  }
+  
+  initEnemies() {
+    this.enemies = [];
+    const enemySpacingX = Math.min(60, this.canvas.width / (this.enemyCols + 2));
+    const enemySpacingY = Math.min(50, this.canvas.height / (this.enemyRows + 4));
+    
+    for (let row = 0; row < this.enemyRows; row++) {
+      for (let col = 0; col < this.enemyCols; col++) {
+        this.enemies.push({
+          x: enemySpacingX + col * enemySpacingX,
+          y: 50 + row * enemySpacingY,
+          width: Math.max(20, enemySpacingX * 0.6),
+          height: Math.max(20, enemySpacingY * 0.6),
+          speed: this.enemySpeed,
+          color: '#ff00ea',
+          alive: true
+        });
+      }
+    }
+  }
+  
+  updateEnemyPositions() {
+    const enemySpacingX = Math.min(60, this.canvas.width / (this.enemyCols + 2));
+    const enemySpacingY = Math.min(50, this.canvas.height / (this.enemyRows + 4));
+    
+    this.enemies.forEach((enemy, index) => {
+      const row = Math.floor(index / this.enemyCols);
+      const col = index % this.enemyCols;
+      
+      enemy.x = enemySpacingX + col * enemySpacingX;
+      enemy.y = 50 + row * enemySpacingY;
+      enemy.width = Math.max(20, enemySpacingX * 0.6);
+      enemy.height = Math.max(20, enemySpacingY * 0.6);
+    });
   }
   
   init() {
@@ -170,7 +208,17 @@ class MarterBlaster {
   }
   
   drawEnemies() {
-    this.enemyWaveManager.draw(this.ctx);
+    this.enemies.forEach(enemy => {
+      if (!enemy.alive) return;
+      
+      this.ctx.fillStyle = enemy.color;
+      this.ctx.beginPath();
+      this.ctx.moveTo(enemy.x, enemy.y);
+      this.ctx.lineTo(enemy.x - enemy.width/2, enemy.y + enemy.height);
+      this.ctx.lineTo(enemy.x + enemy.width/2, enemy.y + enemy.height);
+      this.ctx.closePath();
+      this.ctx.fill();
+    });
   }
   
   drawLasers() {
@@ -186,11 +234,31 @@ class MarterBlaster {
       this.ctx.fillStyle = '#00ff00';
       this.ctx.fillRect(laser.x - 1.5, laser.y, 3, 15);
       
-      // Check collisions using enemy wave manager
-      if (this.enemyWaveManager.checkCollision(laser)) {
-        this.player.lasers.splice(i, 1);
-        document.getElementById('score').textContent = this.score;
-        break;
+      // Check collisions
+      for (let j = 0; j < this.enemies.length; j++) {
+        const enemy = this.enemies[j];
+        if (!enemy.alive) continue;
+        
+        if (
+          laser.x > enemy.x - enemy.width/2 &&
+          laser.x < enemy.x + enemy.width/2 &&
+          laser.y > enemy.y &&
+          laser.y < enemy.y + enemy.height
+        ) {
+          enemy.alive = false;
+          this.player.lasers.splice(i, 1);
+          this.score += 100;
+          document.getElementById('score').textContent = this.score;
+          
+          // Add explosion effect
+          setTimeout(() => {
+            this.ctx.fillStyle = '#ff9900';
+            this.ctx.beginPath();
+            this.ctx.arc(enemy.x, enemy.y, 20, 0, Math.PI * 2);
+            this.ctx.fill();
+          }, 0);
+          break;
+        }
       }
     }
   }
@@ -212,9 +280,6 @@ class MarterBlaster {
     this.ctx.textAlign = 'left';
     this.ctx.fillText(`SCORE: ${this.score}`, 10, 20);
     this.ctx.fillText(`LIVES: ${this.lives}`, this.canvas.width - 120, 20);
-    
-    // Draw wave indicator
-    this.ctx.fillText(`WAVE: ${this.enemyWaveManager.currentWave + 1}`, this.canvas.width / 2 - 60, 20);
   }
   
   gameLoop(timestamp) {
@@ -247,12 +312,23 @@ class MarterBlaster {
       this.touchControls.draw(this.ctx);
     }
     
-    // Update enemy wave manager
-    this.enemyWaveManager.update(deltaTime);
+    // Move enemies with delta time adjustment
+    this.enemies.forEach(enemy => {
+      if (enemy.alive) {
+        enemy.x += enemy.speed * deltaTime;
+        
+        // Reverse direction at edges
+        if (enemy.x > this.canvas.width - 20 || enemy.x < 20) {
+          this.enemies.forEach(e => {
+            if (e.alive) e.speed *= -1;
+          });
+        }
+      }
+    });
     
-    // Check if current wave is complete and start next wave
-    if (this.enemyWaveManager.isWaveComplete()) {
-      this.enemyWaveManager.nextWave();
+    // Check if all enemies are defeated
+    if (this.enemies.every(enemy => !enemy.alive)) {
+      this.resetEnemies();
     }
     
     requestAnimationFrame((ts) => this.gameLoop(ts));
@@ -286,6 +362,16 @@ class MarterBlaster {
     
     this.ctx.font = this.isMobile ? '12px "Press Start 2P"' : '24px "Press Start 2P"';
     this.ctx.fillText(`FINAL SCORE: ${this.score}`, this.canvas.width/2, this.canvas.height/2 + 40);
+  }
+  
+  resetEnemies() {
+    this.enemySpeed *= 1.2; // Increase speed
+    
+    this.enemies.forEach(enemy => {
+      enemy.alive = true;
+      enemy.speed = this.enemySpeed;
+      enemy.y += 20; // Move closer to player
+    });
   }
 }
 

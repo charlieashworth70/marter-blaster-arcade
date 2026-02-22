@@ -2,6 +2,10 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 body {
@@ -12,17 +16,23 @@ body {
   background: #000;
   overflow: hidden;
   font-family: 'Press Start 2P', cursive;
+  touch-action: manipulation;
 }
 
+/* Responsive CRT container */
 .crt {
   position: relative;
-  width: 800px;
-  height: 600px;
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+  aspect-ratio: 800 / 600;
   background: #0a0a12;
   box-shadow: 0 0 10px #00f7ff;
   overflow: hidden;
+  margin: 0 auto;
 }
 
+/* Scanline effect */
 .crt::before {
   content: '';
   position: absolute;
@@ -38,6 +48,7 @@ body {
   );
   pointer-events: none;
   animation: scanline 8s linear infinite;
+  z-index: 1;
 }
 
 @keyframes scanline {
@@ -45,10 +56,18 @@ body {
   100% { background-position: 0 100%; }
 }
 
+/* Canvas styling */
 canvas {
   display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
+/* HUD styling */
 .hud {
   position: absolute;
   top: 10px;
@@ -59,8 +78,112 @@ canvas {
   color: #ff00ea;
   text-shadow: 0 0 5px #ff00ea;
   font-size: 16px;
+  z-index: 2;
+  pointer-events: none;
 }
 
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+  
+  .crt {
+    max-width: 100%;
+    box-shadow: 0 0 5px #00f7ff;
+  }
+  
+  .hud {
+    font-size: 12px;
+    padding: 0 10px;
+    top: 5px;
+  }
+  
+  /* Adjust scanline density for mobile */
+  .crt::before {
+    background: repeating-linear-gradient(
+      transparent,
+      transparent 2px,
+      rgba(0, 247, 255, 0.08) 2px,
+      rgba(0, 247, 255, 0.08) 4px
+    );
+  }
+}
+
+@media (max-width: 480px) {
+  .hud {
+    font-size: 10px;
+    top: 3px;
+  }
+  
+  /* Landscape orientation adjustments */
+  @media (orientation: landscape) {
+    .crt {
+      max-width: 90vh;
+      max-height: 90vw;
+    }
+    
+    .hud {
+      font-size: 10px;
+      top: 5px;
+    }
+  }
+  
+  /* Portrait orientation adjustments */
+  @media (orientation: portrait) {
+    .crt {
+      max-width: 95vw;
+    }
+  }
+}
+
+/* Tablet-specific styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .crt {
+    max-width: 90%;
+  }
+  
+  .hud {
+    font-size: 14px;
+  }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .crt::before {
+    background: repeating-linear-gradient(
+      transparent,
+      transparent 1px,
+      rgba(0, 247, 255, 0.05) 1px,
+      rgba(0, 247, 255, 0.05) 2px
+    );
+  }
+}
+
+/* Loading indicator */
+.loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #00f7ff;
+  font-size: 20px;
+  text-align: center;
+  z-index: 3;
+}
+
+.loading::after {
+  content: '...';
+  animation: loadingDots 1.5s infinite;
+}
+
+@keyframes loadingDots {
+  0%, 20% { content: '.'; }
+  40% { content: '..'; }
+  60%, 100% { content: '...'; }
+}
+
+/* Game over screen */
 #game-over {
   position: absolute;
   top: 50%;
@@ -71,4 +194,73 @@ canvas {
   font-size: 36px;
   text-shadow: 0 0 10px #ff00ea;
   display: none;
+  z-index: 3;
+}
+
+/* Instructions for mobile */
+.mobile-instructions {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 10px;
+  padding: 0 10px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-instructions {
+    font-size: 8px;
+    bottom: 10px;
+  }
+  
+  #game-over {
+    font-size: 24px;
+  }
+}
+
+/* Performance mode indicator */
+.performance-mode {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 8px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Prevent text selection on buttons */
+button, .button {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Smooth transitions for orientation changes */
+.crt, canvas {
+  transition: all 0.3s ease;
+}
+
+/* Hide scrollbars on mobile */
+@media (max-width: 768px) {
+  body {
+    overflow: hidden;
+  }
+  
+  ::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Safe area insets for notched phones */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
 }

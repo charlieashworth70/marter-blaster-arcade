@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Enemy Waves - MarterBlaster</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: #fff;
+            font-family: monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .game-container {
+            width: 800px;
+            max-width: 100%;
+            margin: 20px auto;
+            border: 2px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #111;
+        }
+        
+        .crt {
+            position: relative;
+            width: 100%;
+            padding-bottom: 75%; /* 4:3 aspect ratio */
+            background: #000;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            padding: 15px;
+            background: #222;
+            border-radius: 8px;
+            width: 800px;
+            max-width: 100%;
+        }
+        
+        .controls h3 {
+            margin-top: 0;
+            color: #ff00ea;
+        }
+        
+        .info {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            width: 800px;
+            max-width: 100%;
+        }
+        
+        .info h3 {
+            color: #00f7ff;
+            margin-top: 0;
+        }
+        
+        .key {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #333;
+            border-radius: 4px;
+            margin: 0 5px;
+            font-family: monospace;
+        }
+        
+        .status {
+            color: #0f0;
+            font-weight: bold;
+        }
+        
+        .error {
+            color: #f00;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>MarterBlaster - Enemy Waves Test</h1>
+    <p>Testing R-Type style enemy wave implementation with collision and score handling</p>
+    
+    <div class="game-container">
+        <div class="crt">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <h3>Controls</h3>
+        <p>Move: <span class="key">←</span> <span class="key">→</span> Arrow Keys</p>
+        <p>Fire: <span class="key">Space</span> or <span class="key">↑</span> Arrow Key</p>
+        <p>Touch controls available on mobile devices</p>
+    </div>
+    
+    <div class="info">
+        <h3>Enemy Wave System Features</h3>
+        <ul>
+            <li><span class="status">✓</span> 4 Different enemy types (Scout, Fighter, Bomber, Interceptor)</li>
+            <li><span class="status">✓</span> R-Type style movement patterns (swoop, zigzag, circle, straight)</li>
+            <li><span class="status">✓</span> Wave-based progression system</li>
+            <li><span class="status">✓</span> Formation patterns (line, V-formation, swarm, zigzag)</li>
+            <li><span class="status">✓</span> Health system for tougher enemies</li>
+            <li><span class="status">✓</span> Collision detection with score handling</li>
+            <li><span class="status">✓</span> Explosion effects on enemy destruction</li>
+        </ul>
+        
+        <h3>Test Status</h3>
+        <div id="testStatus">Loading game...</div>
+    </div>
+
+    <script type="module">
+        import { EnemyWaveManager } from './enemy-wave-manager.js';
+        
+        // Simple test to verify enemy wave manager works
+        const testStatus = document.getElementById('testStatus');
+        
+        try {
+            // Create a mock game object for testing
+            const mockGame = {
+                canvas: document.getElementById('gameCanvas'),
+                ctx: document.getElementById('gameCanvas').getContext('2d'),
+                score: 0
+            };
+            
+            // Initialize enemy wave manager
+            const waveManager = new EnemyWaveManager(mockGame);
+            
+            // Test basic functionality
+            waveManager.startWave(0);
+            
+            testStatus.innerHTML = '<span class="status">✓ Enemy Wave Manager initialized successfully</span><br>' +
+                                  '<span class="status">✓ Wave 1 loaded with ' + waveManager.waves[0].enemies.reduce((total, group) => total + group.count, 0) + ' enemies</span><br>' +
+                                  '<span class="status">✓ ' + Object.keys(waveManager.enemyTypes).length + ' enemy types defined</span><br>' +
+                                  '<span class="status">✓ Ready to play! Game will start automatically.</span>';
+            
+            console.log('Enemy Wave Manager test passed:', waveManager);
+            
+        } catch (error) {
+            testStatus.innerHTML = '<span class="error">✗ Error: ' + error.message + '</span>';
+            console.error('Enemy Wave Manager test failed:', error);
+        }
+    </script>
+    
+    <script type="module" src="./game.js"></script>
+</body>
+</html>

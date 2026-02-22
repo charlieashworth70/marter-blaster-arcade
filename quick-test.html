@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Test - Enemy Waves</title>
+    <style>
+        body { margin: 0; padding: 20px; background: #111; color: #fff; font-family: monospace; }
+        canvas { border: 2px solid #333; background: #000; display: block; margin: 20px auto; }
+        .status { color: #0f0; }
+        .error { color: #f00; }
+    </style>
+</head>
+<body>
+    <h1>Enemy Wave System Test</h1>
+    <canvas id="testCanvas" width="400" height="300"></canvas>
+    <div id="status">Loading...</div>
+    
+    <script type="module">
+        import { EnemyWaveManager } from './enemy-wave-manager.js';
+        
+        const status = document.getElementById('status');
+        const canvas = document.getElementById('testCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        try {
+            // Create mock game
+            const game = { canvas, ctx, score: 0 };
+            
+            // Create wave manager
+            const waveManager = new EnemyWaveManager(game);
+            waveManager.startWave(0);
+            
+            status.innerHTML = '<span class="status">✓ EnemyWaveManager created</span><br>';
+            status.innerHTML += `<span class="status">✓ ${waveManager.waves.length} waves loaded</span><br>`;
+            status.innerHTML += `<span class="status">✓ Wave 1 started with ${waveManager.activeEnemies.length} enemies</span>`;
+            
+            // Draw a simple test
+            ctx.fillStyle = '#0a0a12';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Update and draw enemies
+            waveManager.update(1);
+            waveManager.draw(ctx);
+            
+            status.innerHTML += '<br><span class="status">✓ Test rendering complete</span>';
+            
+        } catch (error) {
+            status.innerHTML = `<span class="error">✗ Error: ${error.message}</span>`;
+            console.error(error);
+        }
+    </script>
+</body>
+</html>
